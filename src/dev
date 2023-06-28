@@ -1,0 +1,9 @@
+#!/bin/bash
+
+composer i
+npm i
+php artisan key:generate
+php artisan migrate
+php artisan optimize:clear
+php artisan queue:restart
+npm run build

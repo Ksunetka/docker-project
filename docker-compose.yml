@@ -1,0 +1,71 @@
+version: '3.8'
+
+services:
+  # Web Server Service
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    tty: true
+    container_name: nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  # Application Service
+  app:
+    container_name: app
+    ports:
+      - "9000:9000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /var/www
+    volumes:
+      - ./src:/var/www
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+  #Database Service
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    tty: true
+    container_name: db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: phonebook
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: postgres
+    networks:
+      - app-network
+
+  #phpMyAdmin Service
+  pma:
+    image: dpage/pgadmin4:7.2
+    restart: always
+    container_name: pma
+    ports:
+      - "5050:80"
+    depends_on:
+      - db 
+    environment:
+      PGADMIN_DEFAULT_EMAIL: developer@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: developer
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
